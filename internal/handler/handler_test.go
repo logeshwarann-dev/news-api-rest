@@ -1,9 +1,11 @@
-package handler
+package handler_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/logeshwarann-dev/news-api-rest/internal/handler"
 )
 
 func Test_PostNews(t *testing.T) {
@@ -22,7 +24,7 @@ func Test_PostNews(t *testing.T) {
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest(http.MethodPost, "/", nil)
 			//Act
-			PostNews()(w, r)
+			handler.PostNews()(w, r)
 			//Assert
 			if w.Result().StatusCode != tc.expectedStatus {
 				t.Errorf("expected: %d, got: %d", tc.expectedStatus, w.Result().StatusCode)
@@ -50,7 +52,7 @@ func Test_GetAllNews(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, "/", nil)
 
 			// Act
-			GetAllNews()(w, r)
+			handler.GetAllNews()(w, r)
 
 			//Assert
 			if w.Result().StatusCode != tc.expectedStatus {
@@ -78,7 +80,7 @@ func Test_GetNewsByID(t *testing.T) {
 			r := httptest.NewRequest(http.MethodGet, "/", nil)
 
 			//Act
-			GetNewsByID()(w, r)
+			handler.GetNewsByID()(w, r)
 
 			//Assert
 			if w.Result().StatusCode != tc.expectedStatus {
@@ -104,7 +106,7 @@ func Test_UpdateNewsByID(t *testing.T) {
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodPut, "/", nil)
 		//Act
-		UpdateNewsByID()(w, r)
+		handler.UpdateNewsByID()(w, r)
 		//Assert
 		if w.Result().StatusCode != tc.expectedStatus {
 			t.Errorf("expected: %d, got: %d", tc.expectedStatus, w.Result().StatusCode)
@@ -128,7 +130,7 @@ func Test_DeleteNewsByID(t *testing.T) {
 		w := httptest.NewRecorder()
 		r := httptest.NewRequest(http.MethodDelete, "/", nil)
 		//Act
-		DeleteNewsByID()(w, r)
+		handler.DeleteNewsByID()(w, r)
 		//Assert
 		if w.Result().StatusCode != tc.expectedStatus {
 			t.Errorf("expected: %d, got: %d", tc.expectedStatus, w.Result().StatusCode)
