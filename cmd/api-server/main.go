@@ -12,7 +12,7 @@ import (
 func main() {
 
 	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
-	r := router.New()
+	r := router.New(nil)
 	wrappedRouter := middleware.AddLogger(log, middleware.LogRequest(r))
 	log.Info("server running on port 8080")
 	if err := http.ListenAndServe(":8080", wrappedRouter); err != nil {
