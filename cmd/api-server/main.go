@@ -1,16 +1,18 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/logeshwarann-dev/news-api-rest/internal/router"
 )
 
 func main() {
-	log.Print("Starting Server")
+
+	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
 	r := router.New()
 	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Fatal("unable to start server:", err)
+		log.Error("failed to start server", "error", err)
 	}
 }
