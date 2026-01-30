@@ -11,6 +11,8 @@ import (
 func main() {
 
 	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
+
+	log.Info("server running on port 8080")
 	r := router.New()
 	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Error("failed to start server", "error", err)
