@@ -10,12 +10,12 @@ import (
 func Test_ValidateNewNewsRequest(t *testing.T) {
 	testcases := []struct {
 		name        string
-		req         model.NewNewsRecord
+		req         model.NewsRecord
 		expectedErr bool
 	}{
 		{
 			name: "return_error_empty_author",
-			req: model.NewNewsRecord{
+			req: model.NewsRecord{
 				Author:    "",
 				Title:     "test-title",
 				Summary:   "test-summary",
@@ -28,7 +28,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 		},
 		{
 			name: "return_error_empty_title",
-			req: model.NewNewsRecord{
+			req: model.NewsRecord{
 				Author:    "test-author",
 				Title:     "",
 				Summary:   "test-summary",
@@ -41,7 +41,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 		},
 		{
 			name: "return_error_empty_summary",
-			req: model.NewNewsRecord{
+			req: model.NewsRecord{
 				Author:    "test-author",
 				Title:     "test-title",
 				Summary:   "",
@@ -54,7 +54,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 		},
 		{
 			name: "return_error_invalid_source",
-			req: model.NewNewsRecord{
+			req: model.NewsRecord{
 				Author:    "",
 				Title:     "test-title",
 				Summary:   "test-summary",
@@ -67,7 +67,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 		},
 		{
 			name: "return_error_empty_createdAt",
-			req: model.NewNewsRecord{
+			req: model.NewsRecord{
 				Author:    "test-author",
 				Title:     "test-title",
 				Summary:   "test-summary",
@@ -80,7 +80,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 		},
 		{
 			name: "return_error_empty_tags",
-			req: model.NewNewsRecord{
+			req: model.NewsRecord{
 				Author:    "test-author",
 				Title:     "test-title",
 				Summary:   "test-summary",
@@ -93,7 +93,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 		},
 		{
 			name: "validate",
-			req: model.NewNewsRecord{
+			req: model.NewsRecord{
 				Author:    "test-author",
 				Title:     "test-title",
 				Summary:   "test-summary",
@@ -108,7 +108,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := validator.ValidateNewNewsRequest(tc.req)
+			err := validator.ValidateNewsRequest(tc.req)
 			if tc.expectedErr && err == nil {
 				t.Errorf("expected err: %v, got: %v", tc.expectedErr, err)
 			} else if !tc.expectedErr && err != nil {

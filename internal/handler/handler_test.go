@@ -93,7 +93,7 @@ func Test_PostNews(t *testing.T) {
 func Test_GetAllNews(t *testing.T) {
 	testcases := []struct {
 		name           string
-		response       []model.NewNewsRecord
+		response       []model.NewsRecord
 		mockStore      mockNewsStore
 		expectedStatus int
 	}{
@@ -104,7 +104,7 @@ func Test_GetAllNews(t *testing.T) {
 		},
 		{
 			name: "return_success",
-			response: []model.NewNewsRecord{
+			response: []model.NewsRecord{
 				{
 					Author:    "author",
 					Title:     "test-title",
@@ -138,7 +138,7 @@ func Test_GetAllNews(t *testing.T) {
 			// Act
 			handler.GetAllNews(tc.mockStore)(w, r)
 
-			var actualResp []model.NewNewsRecord
+			var actualResp []model.NewsRecord
 			if len(w.Body.Bytes()) != 0 {
 				if err := json.Unmarshal(w.Body.Bytes(), &actualResp); err != nil {
 					t.Errorf("response unmarshalling failed: %v", err)
@@ -161,7 +161,7 @@ func Test_GetNewsByID(t *testing.T) {
 	testcases := []struct {
 		name           string
 		newsId         string
-		response       model.NewNewsRecord
+		response       model.NewsRecord
 		mockStore      mockNewsStore
 		expectedStatus int
 	}{
@@ -179,7 +179,7 @@ func Test_GetNewsByID(t *testing.T) {
 		{
 			name:   "return_success",
 			newsId: "c2f92052-348f-4372-b4bc-43dbbc88445a",
-			response: model.NewNewsRecord{
+			response: model.NewsRecord{
 				Author:    "124",
 				Title:     "test-title",
 				Summary:   "test-summary",
@@ -201,7 +201,7 @@ func Test_GetNewsByID(t *testing.T) {
 			//Act
 			handler.GetNewsByID(tc.mockStore)(w, r)
 
-			var actualResp model.NewNewsRecord
+			var actualResp model.NewsRecord
 			if len(w.Body.Bytes()) != 0 {
 				if err := json.Unmarshal(w.Body.Bytes(), &actualResp); err != nil {
 					t.Errorf("response unmarshalling failed: %v", err)
@@ -223,48 +223,157 @@ func Test_GetNewsByID(t *testing.T) {
 func Test_UpdateNewsByID(t *testing.T) {
 	testcases := []struct {
 		name           string
+		request        io.Reader
+		newsId         string
+		response       model.NewsRecord
+		mockStore      mockNewsStore
 		expectedStatus int
 	}{
 		{
-			name:           "not implemented",
-			expectedStatus: http.StatusNotImplemented,
+			name:           "incorrect_request_body",
+			request:        strings.NewReader(`{`),
+			newsId:         "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "incorrect_news_id",
+			request: strings.NewReader(`{
+			"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			"author": "test-author",
+			"title": "test-title",
+			"summary": "test-summary",
+			"content": "test-content",
+			"source": "https://google.com",
+			"createdAt": "2026-01-30T18:35:43+05:30",
+			"tags": ["test-tag"]
+			}`),
+			newsId:         "$%123",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "invalid_request",
+			request: strings.NewReader(`{
+			"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			"author": "",
+			"title": "",
+			"summary": "",
+			"content": "test-content",
+			"source": "https://google.com",
+			"createdAt": "1234",
+			"tags": ["test-tag"]
+			}`),
+			newsId:         "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name: "db_error",
+			request: strings.NewReader(`
+			{
+			"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			"author": "test-author",
+			"title": "test-title",
+			"summary": "test-summary",
+			"content": "test-content",
+			"source": "https://google.com",
+			"createdAt": "2026-01-30T18:35:43+05:30",
+			"tags": ["test-tag"]
+			}`),
+			newsId:         "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			mockStore:      mockNewsStore{errState: true},
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name: "update_success",
+			request: strings.NewReader(`
+			{
+			"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			"author": "test-author",
+			"title": "test-title",
+			"summary": "test-summary",
+			"content": "test-content",
+			"source": "https://google.com",
+			"createdAt": "2026-01-30T18:35:43+05:30",
+			"tags": ["test-tag"]
+			}`),
+			newsId: "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			response: model.NewsRecord{
+				Author:    "test-author",
+				Title:     "test-title",
+				Summary:   "test-summary",
+				Content:   "test-content",
+				Source:    "https://google.com",
+				CreatedAt: "2026-01-30T18:35:43+05:30",
+				Tags:      []string{"test-tag"},
+			},
+			expectedStatus: http.StatusOK,
 		},
 	}
 
 	for _, tc := range testcases {
-		//Arrange
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodPut, "/", nil)
-		//Act
-		handler.UpdateNewsByID()(w, r)
-		//Assert
-		if w.Result().StatusCode != tc.expectedStatus {
-			t.Errorf("expected: %d, got: %d", tc.expectedStatus, w.Result().StatusCode)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+
+			//Arrange
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/news/%s", tc.newsId), tc.request)
+			//Act
+			handler.UpdateNewsByID(tc.mockStore)(w, r)
+			var actualResp model.NewsRecord
+			if len(w.Body.Bytes()) != 0 {
+				if err := json.Unmarshal(w.Body.Bytes(), &actualResp); err != nil {
+					t.Errorf("response unmarshalling failed: %v", err)
+					return
+				}
+			}
+			isEqual := reflect.DeepEqual(tc.response, actualResp)
+			if !isEqual {
+				t.Errorf("expected resp: %v, got resp: %v", tc.response, actualResp)
+			}
+			//Assert
+			if w.Result().StatusCode != tc.expectedStatus {
+				t.Errorf("expected status: %d, got status: %d", tc.expectedStatus, w.Result().StatusCode)
+			}
+		})
 	}
 }
 
 func Test_DeleteNewsByID(t *testing.T) {
 	testcases := []struct {
 		name           string
+		newsId         string
+		mockStore      mockNewsStore
 		expectedStatus int
 	}{
 		{
-			name:           "not implemented",
-			expectedStatus: http.StatusNotImplemented,
+			name:           "invalid_newsId",
+			newsId:         "$@123",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "db_error",
+			newsId:         "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			mockStore:      mockNewsStore{errState: true},
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
+			name:           "delete_success",
+			newsId:         "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			expectedStatus: http.StatusNoContent,
 		},
 	}
 
 	for _, tc := range testcases {
-		//Arrange
-		w := httptest.NewRecorder()
-		r := httptest.NewRequest(http.MethodDelete, "/", nil)
-		//Act
-		handler.DeleteNewsByID()(w, r)
-		//Assert
-		if w.Result().StatusCode != tc.expectedStatus {
-			t.Errorf("expected: %d, got: %d", tc.expectedStatus, w.Result().StatusCode)
-		}
+		t.Run(tc.name, func(t *testing.T) {
+
+			//Arrange
+			w := httptest.NewRecorder()
+			r := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/news/%s", tc.newsId), nil)
+			//Act
+			handler.DeleteNewsByID(tc.mockStore)(w, r)
+			//Assert
+			if w.Result().StatusCode != tc.expectedStatus {
+				t.Errorf("expected status: %d, got status: %d", tc.expectedStatus, w.Result().StatusCode)
+			}
+		})
 	}
 }
 
@@ -272,37 +381,37 @@ type mockNewsStore struct {
 	errState bool
 }
 
-func (mns mockNewsStore) Create(newsRecord model.NewNewsRecord) (model.NewNewsRecord, error) {
+func (mns mockNewsStore) Create(newsRecord model.NewsRecord) (model.NewsRecord, error) {
 	if mns.errState {
 		return newsRecord, errors.New("failed to create news")
 	}
 	return newsRecord, nil
 }
 
-func (mns mockNewsStore) FindAll() (newsRecords []model.NewNewsRecord, err error) {
+func (mns mockNewsStore) FindAll() (newsRecords []model.NewsRecord, err error) {
 	if mns.errState {
 		return newsRecords, errors.New("failed to find news")
 	}
 	return newsRecords, nil
 }
 
-func (mns mockNewsStore) FindById(id uuid.UUID) (newsRecord model.NewNewsRecord, err error) {
+func (mns mockNewsStore) FindById(id uuid.UUID) (newsRecord model.NewsRecord, err error) {
 	if mns.errState {
 		return newsRecord, errors.New("failed to find news by id")
 	}
 	return newsRecord, nil
 }
 
-func (mns mockNewsStore) UpdateById(id uuid.UUID) (newsRecord model.NewNewsRecord, err error) {
+func (mns mockNewsStore) UpdateById(id uuid.UUID, newsRecord model.NewsRecord) (model.NewsRecord, error) {
 	if mns.errState {
 		return newsRecord, errors.New("failed to update news")
 	}
 	return newsRecord, nil
 }
 
-func (mns mockNewsStore) DeleteById(id uuid.UUID) (newsRecord model.NewNewsRecord, err error) {
+func (mns mockNewsStore) DeleteById(id uuid.UUID) (err error) {
 	if mns.errState {
-		return newsRecord, errors.New("failed to delete news")
+		return errors.New("failed to delete news")
 	}
-	return newsRecord, nil
+	return nil
 }

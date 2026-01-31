@@ -10,7 +10,7 @@ import (
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
 )
 
-func ValidateNewNewsRequest(newsRecord model.NewNewsRecord) (errs error) {
+func ValidateNewsRequest(newsRecord model.NewsRecord) (errs error) {
 	if newsRecord.Author == "" {
 		errs = errors.Join(errs, fmt.Errorf("author is empty: %s", newsRecord.Author))
 	}

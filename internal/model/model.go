@@ -1,6 +1,6 @@
 package model
 
-type NewNewsRecord struct {
+type NewsRecord struct {
 	Author    string   `json:"author,omitempty"`
 	Title     string   `json:"title,omitempty"`
 	Summary   string   `json:"summary,omitempty"`
