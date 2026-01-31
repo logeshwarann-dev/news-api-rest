@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/logeshwarann-dev/news-api-rest/internal/logger"
@@ -15,7 +14,7 @@ type NewsStorer interface {
 	//Create News
 	Create(model.NewsRecord) (model.NewsRecord, error)
 	//Get All News
-	FindAll() ([]model.NewsRecord, error)
+	FindAll() (model.AllNewsRecords, error)
 	//Get News By Id
 	FindById(uuid.UUID) (model.NewsRecord, error)
 	//Update News By Id
@@ -62,22 +61,25 @@ func GetAllNews(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		newsRecords = []model.NewsRecord{{
-			Author:    "author",
-			Title:     "test-title",
-			Summary:   "test-summary",
-			Content:   "test-content",
-			Source:    "test-url",
-			CreatedAt: "2026-01-30T18:35:43+05:30",
-			Tags:      []string{"test-tag"},
-		}, {Author: "124",
-			Title:     "test-title",
-			Summary:   "test-summary",
-			Content:   "test-content",
-			Source:    "test-url",
-			CreatedAt: "2026-01-30T18:35:43+05:30",
-			Tags:      []string{"test-tag"},
-		},
+		newsRecords = model.AllNewsRecords{
+			NewsRecords: []model.NewsRecord{
+				{
+					Author:    "author",
+					Title:     "test-title",
+					Summary:   "test-summary",
+					Content:   "test-content",
+					Source:    "test-url",
+					CreatedAt: "2026-01-30T18:35:43+05:30",
+					Tags:      []string{"test-tag"},
+				}, {Author: "124",
+					Title:     "test-title",
+					Summary:   "test-summary",
+					Content:   "test-content",
+					Source:    "test-url",
+					CreatedAt: "2026-01-30T18:35:43+05:30",
+					Tags:      []string{"test-tag"},
+				},
+			},
 		}
 		if err := json.NewEncoder(w).Encode(newsRecords); err != nil {
 			log.Error("failed encoding records", "error", err)
@@ -92,8 +94,7 @@ func GetNewsByID(ns NewsStorer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := logger.FromContext(r.Context())
 		log.Info("getnewsbyid request recieved")
-		// id := r.PathValue("news_id")
-		id := strings.TrimPrefix(r.URL.Path, "/news/")
+		id := r.PathValue("news_id")
 		newsId, err := validator.ValidateNewsId(id)
 		if err != nil {
 			log.Error("invalid newsId", "error", err)
@@ -139,7 +140,7 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		id := strings.TrimPrefix(r.URL.Path, "/news/")
+		id := r.PathValue("news_id")
 		newsId, err := validator.ValidateNewsId(id)
 		if err != nil {
 			log.Error("invalid news id", "error", err)
@@ -175,7 +176,7 @@ func DeleteNewsByID(ns NewsStorer) http.HandlerFunc {
 		log := logger.FromContext(r.Context())
 		log.Info("deletenewsbyid request recieved")
 
-		id := strings.TrimPrefix(r.URL.Path, "/news/")
+		id := r.PathValue("news_id")
 		newsId, err := validator.ValidateNewsId(id)
 		if err != nil {
 			log.Error("invalid newsid", "error", err)

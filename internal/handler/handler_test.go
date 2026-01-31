@@ -3,7 +3,6 @@ package handler_test
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -93,7 +92,7 @@ func Test_PostNews(t *testing.T) {
 func Test_GetAllNews(t *testing.T) {
 	testcases := []struct {
 		name           string
-		response       []model.NewsRecord
+		response       model.AllNewsRecords
 		mockStore      mockNewsStore
 		expectedStatus int
 	}{
@@ -104,24 +103,26 @@ func Test_GetAllNews(t *testing.T) {
 		},
 		{
 			name: "return_success",
-			response: []model.NewsRecord{
-				{
-					Author:    "author",
-					Title:     "test-title",
-					Summary:   "test-summary",
-					Content:   "test-content",
-					Source:    "test-url",
-					CreatedAt: "2026-01-30T18:35:43+05:30",
-					Tags:      []string{"test-tag"},
-				},
-				{
-					Author:    "124",
-					Title:     "test-title",
-					Summary:   "test-summary",
-					Content:   "test-content",
-					Source:    "test-url",
-					CreatedAt: "2026-01-30T18:35:43+05:30",
-					Tags:      []string{"test-tag"},
+			response: model.AllNewsRecords{
+				NewsRecords: []model.NewsRecord{
+					{
+						Author:    "author",
+						Title:     "test-title",
+						Summary:   "test-summary",
+						Content:   "test-content",
+						Source:    "test-url",
+						CreatedAt: "2026-01-30T18:35:43+05:30",
+						Tags:      []string{"test-tag"},
+					},
+					{
+						Author:    "124",
+						Title:     "test-title",
+						Summary:   "test-summary",
+						Content:   "test-content",
+						Source:    "test-url",
+						CreatedAt: "2026-01-30T18:35:43+05:30",
+						Tags:      []string{"test-tag"},
+					},
 				},
 			},
 			expectedStatus: http.StatusOK,
@@ -138,7 +139,7 @@ func Test_GetAllNews(t *testing.T) {
 			// Act
 			handler.GetAllNews(tc.mockStore)(w, r)
 
-			var actualResp []model.NewsRecord
+			var actualResp model.AllNewsRecords
 			if len(w.Body.Bytes()) != 0 {
 				if err := json.Unmarshal(w.Body.Bytes(), &actualResp); err != nil {
 					t.Errorf("response unmarshalling failed: %v", err)
@@ -196,8 +197,8 @@ func Test_GetNewsByID(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			//Arrange
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/news/%s", tc.newsId), nil)
-
+			r := httptest.NewRequest(http.MethodGet, "/news/", nil)
+			r.SetPathValue("news_id", tc.newsId)
 			//Act
 			handler.GetNewsByID(tc.mockStore)(w, r)
 
@@ -314,7 +315,8 @@ func Test_UpdateNewsByID(t *testing.T) {
 
 			//Arrange
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/news/%s", tc.newsId), tc.request)
+			r := httptest.NewRequest(http.MethodPut, "/news/", tc.request)
+			r.SetPathValue("news_id", tc.newsId)
 			//Act
 			handler.UpdateNewsByID(tc.mockStore)(w, r)
 			var actualResp model.NewsRecord
@@ -366,7 +368,8 @@ func Test_DeleteNewsByID(t *testing.T) {
 
 			//Arrange
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/news/%s", tc.newsId), nil)
+			r := httptest.NewRequest(http.MethodDelete, "/news/", nil)
+			r.SetPathValue("news_id", tc.newsId)
 			//Act
 			handler.DeleteNewsByID(tc.mockStore)(w, r)
 			//Assert
@@ -388,7 +391,7 @@ func (mns mockNewsStore) Create(newsRecord model.NewsRecord) (model.NewsRecord, 
 	return newsRecord, nil
 }
 
-func (mns mockNewsStore) FindAll() (newsRecords []model.NewsRecord, err error) {
+func (mns mockNewsStore) FindAll() (newsRecords model.AllNewsRecords, err error) {
 	if mns.errState {
 		return newsRecords, errors.New("failed to find news")
 	}
