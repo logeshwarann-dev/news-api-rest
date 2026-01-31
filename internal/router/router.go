@@ -6,16 +6,16 @@ import (
 	"github.com/logeshwarann-dev/news-api-rest/internal/handler"
 )
 
-func New() *http.ServeMux {
+func New(ns handler.NewsStorer) *http.ServeMux {
 	//Setup new server mux
 	r := http.NewServeMux()
 
 	//Create News
-	r.HandleFunc("POST /news", handler.PostNews())
+	r.HandleFunc("POST /news", handler.PostNews(ns))
 	//Get all News
-	r.HandleFunc("GET /news", handler.GetAllNews())
+	r.HandleFunc("GET /news", handler.GetAllNews(ns))
 	//Get News By Id
-	r.HandleFunc("GET /news/{news_id}", handler.GetNewsByID())
+	r.HandleFunc("GET /news/{news_id}", handler.GetNewsByID(ns))
 	//Update News By Id
 	r.HandleFunc("PUT /news/{news_id}", handler.UpdateNewsByID())
 	//Delete News By Id

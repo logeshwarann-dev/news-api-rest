@@ -17,6 +17,7 @@ func AddLogger(slogger *slog.Logger, next http.Handler) http.HandlerFunc {
 
 func LogRequest(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		slogger := logger.FromContext(r.Context())
 		slogger.Info("request", "path", r.URL.Path)
 		next.ServeHTTP(w, r)

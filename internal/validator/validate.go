@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
 )
 
@@ -30,4 +31,11 @@ func ValidateNewNewsRequest(newsRecord model.NewNewsRecord) (errs error) {
 	}
 
 	return errs
+}
+
+func ValidateNewsId(id string) (newsId uuid.UUID, err error) {
+	if newsId, err = uuid.Parse(id); err != nil {
+		return newsId, errors.Join(err, fmt.Errorf("unable to parse newsid: %s", id))
+	}
+	return newsId, nil
 }
