@@ -170,8 +170,23 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 	}
 }
 
-func DeleteNewsByID() http.HandlerFunc {
+func DeleteNewsByID(ns NewsStorer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log := logger.FromContext(r.Context())
+		log.Info("deletenewsbyid request recieved")
+
+		id := strings.TrimPrefix(r.URL.Path, "/news/")
+		newsId, err := validator.ValidateNewsId(id)
+		if err != nil {
+			log.Error("invalid newsid", "error", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if err := ns.DeleteById(newsId); err != nil {
+			log.Error("failed to delete news by id", "error", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

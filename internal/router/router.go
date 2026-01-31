@@ -19,7 +19,7 @@ func New(ns handler.NewsStorer) *http.ServeMux {
 	//Update News By Id
 	r.HandleFunc("PUT /news/{news_id}", handler.UpdateNewsByID(ns))
 	//Delete News By Id
-	r.HandleFunc("DELETE /news/{news_id}", handler.DeleteNewsByID())
+	r.HandleFunc("DELETE /news/{news_id}", handler.DeleteNewsByID(ns))
 
 	return r
 }

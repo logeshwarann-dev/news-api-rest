@@ -344,7 +344,19 @@ func Test_DeleteNewsByID(t *testing.T) {
 		expectedStatus int
 	}{
 		{
+			name:           "invalid_newsId",
+			newsId:         "$@123",
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "db_error",
+			newsId:         "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			mockStore:      mockNewsStore{errState: true},
+			expectedStatus: http.StatusInternalServerError,
+		},
+		{
 			name:           "delete_success",
+			newsId:         "c2f92052-348f-4372-b4bc-43dbbc88445a",
 			expectedStatus: http.StatusNoContent,
 		},
 	}
@@ -354,12 +366,12 @@ func Test_DeleteNewsByID(t *testing.T) {
 
 			//Arrange
 			w := httptest.NewRecorder()
-			r := httptest.NewRequest(http.MethodDelete, "/", nil)
+			r := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/news/%s", tc.newsId), nil)
 			//Act
-			handler.DeleteNewsByID()(w, r)
+			handler.DeleteNewsByID(tc.mockStore)(w, r)
 			//Assert
 			if w.Result().StatusCode != tc.expectedStatus {
-				t.Errorf("expected: %d, got: %d", tc.expectedStatus, w.Result().StatusCode)
+				t.Errorf("expected status: %d, got status: %d", tc.expectedStatus, w.Result().StatusCode)
 			}
 		})
 	}
