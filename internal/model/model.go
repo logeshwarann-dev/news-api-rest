@@ -9,3 +9,7 @@ type NewsRecord struct {
 	CreatedAt string   `json:"createdAt,omitempty"`
 	Tags      []string `json:"tags,omitempty"`
 }
+
+type AllNewsRecords struct {
+	NewsRecords []NewsRecord `json:"news,omitempty"`
+}
