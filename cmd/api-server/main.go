@@ -7,12 +7,14 @@ import (
 
 	"github.com/logeshwarann-dev/news-api-rest/internal/middleware"
 	"github.com/logeshwarann-dev/news-api-rest/internal/router"
+	"github.com/logeshwarann-dev/news-api-rest/internal/store"
 )
 
 func main() {
 
 	log := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{AddSource: true}))
-	r := router.New(nil)
+	store := store.New()
+	r := router.New(store)
 	wrappedRouter := middleware.AddLogger(log, middleware.LogRequest(r))
 	log.Info("server running on port 8080")
 	if err := http.ListenAndServe(":8080", wrappedRouter); err != nil {

@@ -9,10 +9,12 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/logeshwarann-dev/news-api-rest/internal/handler"
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
+	"github.com/logeshwarann-dev/news-api-rest/internal/store"
 )
 
 func Test_PostNews(t *testing.T) {
@@ -103,25 +105,59 @@ func Test_GetAllNews(t *testing.T) {
 		},
 		{
 			name: "return_success",
-			response: model.AllNewsRecords{
-				NewsRecords: []model.NewsRecord{
+			mockStore: mockNewsStore{
+				news: []store.News{
 					{
-						Author:    "author",
-						Title:     "test-title",
-						Summary:   "test-summary",
-						Content:   "test-content",
-						Source:    "test-url",
-						CreatedAt: "2026-01-30T18:35:43+05:30",
-						Tags:      []string{"test-tag"},
+						Author:  "author",
+						Title:   "test-title",
+						Summary: "test-summary",
+						Content: "test-content",
+						Source:  "test-url",
+						CreatedAt: func() time.Time {
+							val, _ := time.Parse(time.RFC3339, "2026-01-30T18:35:43+05:30")
+							return val
+						}(),
+						Tags: []string{"test-tag"},
 					},
 					{
-						Author:    "124",
-						Title:     "test-title",
-						Summary:   "test-summary",
-						Content:   "test-content",
-						Source:    "test-url",
-						CreatedAt: "2026-01-30T18:35:43+05:30",
-						Tags:      []string{"test-tag"},
+						Author:  "124",
+						Title:   "test-title",
+						Summary: "test-summary",
+						Content: "test-content",
+						Source:  "test-url",
+						CreatedAt: func() time.Time {
+							val, _ := time.Parse(time.RFC3339, "2026-01-30T18:35:43+05:30")
+							return val
+						}(),
+						Tags: []string{"test-tag"},
+					},
+				},
+			},
+			response: model.AllNewsRecords{
+				NewsRecords: []store.News{
+					{
+						Author:  "author",
+						Title:   "test-title",
+						Summary: "test-summary",
+						Content: "test-content",
+						Source:  "test-url",
+						CreatedAt: func() time.Time {
+							val, _ := time.Parse(time.RFC3339, "2026-01-30T18:35:43+05:30")
+							return val
+						}(),
+						Tags: []string{"test-tag"},
+					},
+					{
+						Author:  "124",
+						Title:   "test-title",
+						Summary: "test-summary",
+						Content: "test-content",
+						Source:  "test-url",
+						CreatedAt: func() time.Time {
+							val, _ := time.Parse(time.RFC3339, "2026-01-30T18:35:43+05:30")
+							return val
+						}(),
+						Tags: []string{"test-tag"},
 					},
 				},
 			},
@@ -180,6 +216,26 @@ func Test_GetNewsByID(t *testing.T) {
 		{
 			name:   "return_success",
 			newsId: "c2f92052-348f-4372-b4bc-43dbbc88445a",
+			mockStore: mockNewsStore{
+				news: []store.News{
+					{
+						Id: func() uuid.UUID {
+							id, _ := uuid.Parse("c2f92052-348f-4372-b4bc-43dbbc88445a")
+							return id
+						}(),
+						Author:  "124",
+						Title:   "test-title",
+						Summary: "test-summary",
+						Content: "test-content",
+						Source:  "test-url",
+						CreatedAt: func() time.Time {
+							val, _ := time.Parse(time.RFC3339, "2026-01-30T18:35:43+05:30")
+							return val
+						}(),
+						Tags: []string{"test-tag"},
+					},
+				},
+			},
 			response: model.NewsRecord{
 				Author:    "124",
 				Title:     "test-title",
@@ -382,30 +438,37 @@ func Test_DeleteNewsByID(t *testing.T) {
 
 type mockNewsStore struct {
 	errState bool
+	news     []store.News
 }
 
-func (mns mockNewsStore) Create(newsRecord model.NewsRecord) (model.NewsRecord, error) {
+func (mns mockNewsStore) Create(newsRecord store.News) (store.News, error) {
 	if mns.errState {
 		return newsRecord, errors.New("failed to create news")
 	}
 	return newsRecord, nil
 }
 
-func (mns mockNewsStore) FindAll() (newsRecords model.AllNewsRecords, err error) {
+func (mns mockNewsStore) FindAll() (newsRecords []store.News, err error) {
 	if mns.errState {
-		return newsRecords, errors.New("failed to find news")
+		return mns.news, errors.New("failed to find news")
 	}
-	return newsRecords, nil
+	return mns.news, nil
 }
 
-func (mns mockNewsStore) FindById(id uuid.UUID) (newsRecord model.NewsRecord, err error) {
+func (mns mockNewsStore) FindById(id uuid.UUID) (newsRecord store.News, err error) {
 	if mns.errState {
 		return newsRecord, errors.New("failed to find news by id")
+	}
+	for _, n := range mns.news {
+		if n.Id == id {
+			newsRecord = n
+			break
+		}
 	}
 	return newsRecord, nil
 }
 
-func (mns mockNewsStore) UpdateById(id uuid.UUID, newsRecord model.NewsRecord) (model.NewsRecord, error) {
+func (mns mockNewsStore) UpdateById(id uuid.UUID, newsRecord store.News) (store.News, error) {
 	if mns.errState {
 		return newsRecord, errors.New("failed to update news")
 	}
