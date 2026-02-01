@@ -49,6 +49,7 @@ func (s *Store) UpdateById(id uuid.UUID, newsRecord News) (News, error) {
 	defer s.m.Unlock()
 	for index, news := range s.store {
 		if news.Id == id {
+			newsRecord.Id = id
 			s.store = append(s.store[:index], s.store[index+1:]...)
 			s.store = append(s.store, newsRecord)
 			return newsRecord, nil
