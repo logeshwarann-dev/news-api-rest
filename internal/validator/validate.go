@@ -22,11 +22,17 @@ func ValidateNewsRequest(newsRecord model.NewsRecord) (news store.News, errs err
 	if newsRecord.Summary == "" {
 		errs = errors.Join(errs, fmt.Errorf("summary is empty: %s", newsRecord.Summary))
 	}
+	if newsRecord.Content == "" {
+		errs = errors.Join(errs, fmt.Errorf("content is empty: %s", newsRecord.Content))
+	}
 	var createdTime time.Time
 	var err error
 	var urlValue *url.URL
 	if createdTime, err = time.Parse(time.RFC3339, newsRecord.CreatedAt); err != nil {
 		errs = errors.Join(errs, fmt.Errorf("invalid createdAt time: %s", newsRecord.CreatedAt))
+	}
+	if newsRecord.Source == "" {
+		errs = errors.Join(errs, fmt.Errorf("source is empty: %s", newsRecord.Summary))
 	}
 	if urlValue, err = url.Parse(newsRecord.Source); err != nil {
 		errs = errors.Join(errs, fmt.Errorf("invalid source url: %s", newsRecord.Source))
