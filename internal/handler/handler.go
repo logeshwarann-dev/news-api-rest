@@ -7,18 +7,19 @@ import (
 	"github.com/google/uuid"
 	"github.com/logeshwarann-dev/news-api-rest/internal/logger"
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
+	"github.com/logeshwarann-dev/news-api-rest/internal/store"
 	"github.com/logeshwarann-dev/news-api-rest/internal/validator"
 )
 
 type NewsStorer interface {
 	//Create News
-	Create(model.NewsRecord) (model.NewsRecord, error)
+	Create(store.News) (store.News, error)
 	//Get All News
-	FindAll() (model.AllNewsRecords, error)
+	FindAll() ([]store.News, error)
 	//Get News By Id
-	FindById(uuid.UUID) (model.NewsRecord, error)
+	FindById(uuid.UUID) (store.News, error)
 	//Update News By Id
-	UpdateById(uuid.UUID, model.NewsRecord) (model.NewsRecord, error)
+	UpdateById(uuid.UUID, store.News) (store.News, error)
 	//Delete News By Id
 	DeleteById(uuid.UUID) error
 }
@@ -34,13 +35,15 @@ func PostNews(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err := validator.ValidateNewsRequest(newsRequestBody); err != nil {
+		var newsReq store.News
+		var err error
+		if newsReq, err = validator.ValidateNewsRequest(newsRequestBody); err != nil {
 			log.Error("validation error, invalid request", "error", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			w.Write([]byte(err.Error()))
 			return
 		}
-		_, err := ns.Create(newsRequestBody)
+		_, err = ns.Create(newsReq)
 		if err != nil {
 			log.Error("failed adding news in db", "error", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
@@ -55,31 +58,14 @@ func GetAllNews(ns NewsStorer) http.HandlerFunc {
 		log := logger.FromContext(r.Context())
 		log.Info("getallnews request recieved")
 
-		newsRecords, err := ns.FindAll()
+		records, err := ns.FindAll()
+		newsRecords := model.AllNewsRecords{
+			NewsRecords: records,
+		}
 		if err != nil {
 			log.Error("failed finding all news", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		}
-		newsRecords = model.AllNewsRecords{
-			NewsRecords: []model.NewsRecord{
-				{
-					Author:    "author",
-					Title:     "test-title",
-					Summary:   "test-summary",
-					Content:   "test-content",
-					Source:    "test-url",
-					CreatedAt: "2026-01-30T18:35:43+05:30",
-					Tags:      []string{"test-tag"},
-				}, {Author: "124",
-					Title:     "test-title",
-					Summary:   "test-summary",
-					Content:   "test-content",
-					Source:    "test-url",
-					CreatedAt: "2026-01-30T18:35:43+05:30",
-					Tags:      []string{"test-tag"},
-				},
-			},
 		}
 		if err := json.NewEncoder(w).Encode(newsRecords); err != nil {
 			log.Error("failed encoding records", "error", err)
@@ -107,15 +93,7 @@ func GetNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		newsRecord = model.NewsRecord{
-			Author:    "124",
-			Title:     "test-title",
-			Summary:   "test-summary",
-			Content:   "test-content",
-			Source:    "test-url",
-			CreatedAt: "2026-01-30T18:35:43+05:30",
-			Tags:      []string{"test-tag"},
-		}
+
 		if err := json.NewEncoder(w).Encode(newsRecord); err != nil {
 			log.Error("failed encoding response", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -135,7 +113,9 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err := validator.ValidateNewsRequest(req); err != nil {
+		var newsReq store.News
+		var err error
+		if newsReq, err = validator.ValidateNewsRequest(req); err != nil {
 			log.Error("invalid request", "error", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -147,20 +127,11 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		resp, err := ns.UpdateById(newsId, req)
+		resp, err := ns.UpdateById(newsId, newsReq)
 		if err != nil {
 			log.Error("unable to update news by id", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
-		}
-		resp = model.NewsRecord{
-			Author:    "test-author",
-			Title:     "test-title",
-			Summary:   "test-summary",
-			Content:   "test-content",
-			Source:    "https://google.com",
-			CreatedAt: "2026-01-30T18:35:43+05:30",
-			Tags:      []string{"test-tag"},
 		}
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
 			log.Error("response encoding failed", "error", err)

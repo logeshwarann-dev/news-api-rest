@@ -108,7 +108,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := validator.ValidateNewsRequest(tc.req)
+			_, err := validator.ValidateNewsRequest(tc.req)
 			if tc.expectedErr && err == nil {
 				t.Errorf("expected err: %v, got: %v", tc.expectedErr, err)
 			} else if !tc.expectedErr && err != nil {

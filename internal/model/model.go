@@ -1,5 +1,7 @@
 package model
 
+import "github.com/logeshwarann-dev/news-api-rest/internal/store"
+
 type NewsRecord struct {
 	Author    string   `json:"author,omitempty"`
 	Title     string   `json:"title,omitempty"`
@@ -11,5 +13,5 @@ type NewsRecord struct {
 }
 
 type AllNewsRecords struct {
-	NewsRecords []NewsRecord `json:"news,omitempty"`
+	NewsRecords []store.News `json:"news,omitempty"`
 }
