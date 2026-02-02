@@ -4,15 +4,71 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"testing"
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/google/uuid"
+	"github.com/logeshwarann-dev/news-api-rest/internal/news"
 	"github.com/logeshwarann-dev/news-api-rest/internal/postgres"
+	"github.com/stretchr/testify/assert"
 	"github.com/testcontainers/testcontainers-go"
 	pgtc "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/uptrace/bun"
 )
+
+var db *bun.DB
+
+func TestMain(m *testing.M) {
+	ctx := context.Background()
+	pgdb, cleanup, err := createTestDB(ctx)
+	if err != nil {
+		panic(err)
+	}
+	db = pgdb
+	code := m.Run()
+	if err := cleanup(ctx); err != nil {
+		panic(err)
+	}
+	os.Exit(code)
+}
+
+func TestStore_Create(t *testing.T) {
+	testcases := []struct {
+		name           string
+		context        context.Context
+		record         news.Record
+		expectedErr    string
+		expectedStatus int
+	}{
+		{
+			name:    "return_success",
+			context: context.Background(),
+			record: news.Record{
+				Id:        uuid.New(),
+				Author:    "Batman",
+				Title:     "Breaking NEWS",
+				Summary:   "A brief summary of news",
+				Content:   "Batman is a hero with super powers who saves people from devil",
+				Source:    "https://www.google.com",
+				Tags:      []string{"marvel", "test-1"},
+				CreateAt:  time.Now(),
+				UpdatedAt: time.Now(),
+			},
+			expectedStatus: 200,
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			store := news.NewStore(db)
+			_, err := store.Create(tc.context, tc.record)
+			if err != nil {
+				assert.Contains(t, err, tc.expectedErr)
+			}
+		})
+	}
+}
 
 func createTestContainer(ctx context.Context) (ctr *pgtc.PostgresContainer, err error) {
 	wd, err := os.Getwd()
@@ -23,7 +79,7 @@ func createTestContainer(ctx context.Context) (ctr *pgtc.PostgresContainer, err 
 
 	ctr, err = pgtc.Run(
 		ctx,
-		"postgres:16-apline",
+		"sha256:d7ead3a9d3fe4f2906d95e00edc8b36b65749a00a49c47285a35d2be95e876dd",
 		pgtc.WithInitScripts(sqlScripts),
 		pgtc.WithDatabase("postgres"),
 		pgtc.WithUsername("postgres"),
@@ -31,7 +87,7 @@ func createTestContainer(ctx context.Context) (ctr *pgtc.PostgresContainer, err 
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(30*time.Second),
+				WithStartupTimeout(60*time.Second),
 		),
 	)
 	if err != nil {
