@@ -191,6 +191,62 @@ func TestStore_FindAll(t *testing.T) {
 	}
 }
 
+func TestStore_UpdateById(t *testing.T) {
+	testcases := []struct {
+		name           string
+		ctx            context.Context
+		newsId         uuid.UUID
+		updatedRecord  news.Record
+		expectedErr    string
+		expectedStatus int
+	}{
+		{
+			name:   "return_valid_news",
+			ctx:    context.Background(),
+			newsId: uuid.MustParse("67a7f4b7-2261-4121-a578-bf9da06aa0f3"),
+			updatedRecord: news.Record{
+				Author:  "Batman",
+				Title:   "Batman NEWS",
+				Summary: "A brief summary of news",
+				Content: "Batman is a hero with super powers who saves people from devil",
+				Source:  "https://www.google.com",
+				Tags:    []string{"marvel", "sci-fi"},
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "return_not_found_error",
+			ctx:            context.Background(),
+			newsId:         uuid.MustParse("98a7f4b7-2261-4121-a578-bf9da06aa0f3"),
+			expectedErr:    "record not found",
+			expectedStatus: http.StatusNotFound,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := news.NewStore(db)
+			got, _ := s.FindById(tc.ctx, tc.newsId)
+			tc.updatedRecord.CreateAt = got.CreateAt
+			tc.updatedRecord.UpdatedAt = got.UpdatedAt
+			err := s.UpdateById(tc.ctx, tc.newsId, tc.updatedRecord)
+			if tc.expectedErr != "" {
+				assert.Error(t, err)
+				assert.ErrorContains(t, err, tc.expectedErr)
+				var storeErr *news.CustomError
+				assert.ErrorAs(t, err, &storeErr)
+				assert.Equal(t, tc.expectedStatus, storeErr.GetHttpStatus())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestStore_DeleteById(t *testing.T) {
+
+}
+
 func assertOnNews(tb testing.TB, expected, got news.Record) {
 	tb.Helper()
 	assert.Equal(tb, expected.Author, got.Author)
