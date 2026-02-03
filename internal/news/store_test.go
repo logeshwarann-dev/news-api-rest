@@ -139,7 +139,56 @@ func TestStore_FindById(t *testing.T) {
 }
 
 func TestStore_FindAll(t *testing.T) {
+	testcases := []struct {
+		name            string
+		ctx             context.Context
+		expectedRecords []news.Record
+		expectedErr     string
+		expectedStatus  int
+	}{
+		{
+			name: "return_all_records",
+			ctx:  context.Background(),
+			expectedRecords: []news.Record{
+				{
+					Author:  "Batman",
+					Title:   "Breaking NEWS",
+					Summary: "A brief summary of news",
+					Content: "Batman is a hero with super powers who saves people from devil",
+					Source:  "https://www.google.com",
+					Tags:    []string{"marvel", "sci-fi"},
+				},
+				{
+					Author:  "Superman",
+					Title:   "Breaking NEWS",
+					Summary: "A brief summary of news",
+					Content: "Superman is a hero with super powers who saves people from devil",
+					Source:  "https://www.google.com",
+					Tags:    []string{"marvel", "sci-fi"},
+				},
+			},
+			expectedStatus: http.StatusOK,
+		},
+	}
 
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := news.NewStore(db)
+			got, err := s.FindAll(tc.ctx)
+			if tc.expectedErr != "" {
+				assert.Error(t, err)
+				assert.ErrorContains(t, err, tc.expectedErr)
+				var storeErr *news.CustomError
+				assert.ErrorAs(t, err, &storeErr)
+				assert.Equal(t, tc.expectedStatus, storeErr.GetHttpStatus())
+			} else {
+				assert.NoError(t, err)
+				for i, record := range tc.expectedRecords {
+					assertOnNews(t, record, got[i])
+				}
+			}
+		})
+	}
 }
 
 func assertOnNews(tb testing.TB, expected, got news.Record) {
