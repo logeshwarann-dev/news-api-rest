@@ -3,12 +3,12 @@ package news_test
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 	"time"
 
 	"github.com/docker/go-connections/nat"
-	"github.com/google/uuid"
 	"github.com/logeshwarann-dev/news-api-rest/internal/news"
 	"github.com/logeshwarann-dev/news-api-rest/internal/postgres"
 	"github.com/stretchr/testify/assert"
@@ -43,31 +43,47 @@ func TestStore_Create(t *testing.T) {
 		expectedStatus int
 	}{
 		{
-			name:    "return_success",
+			name:    "missing_author",
 			context: context.Background(),
 			record: news.Record{
-				Id:        uuid.New(),
-				Author:    "Batman",
-				Title:     "Breaking NEWS",
-				Summary:   "A brief summary of news",
-				Content:   "Batman is a hero with super powers who saves people from devil",
-				Source:    "https://www.google.com",
-				Tags:      []string{"marvel", "test-1"},
-				CreateAt:  time.Now(),
-				UpdatedAt: time.Now(),
+				Title:   "Breaking NEWS",
+				Summary: "A brief summary of news",
+				Content: "Batman is a hero with super powers who saves people from devil",
+				Source:  "https://www.google.com",
+				Tags:    []string{"marvel", "test-1"},
 			},
-			expectedStatus: 200,
+			expectedErr:    "not-null",
+			expectedStatus: http.StatusInternalServerError,
 		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			store := news.NewStore(db)
-			_, err := store.Create(tc.context, tc.record)
+			got, err := store.Create(tc.context, tc.record)
 			if err != nil {
-				assert.Contains(t, err, tc.expectedErr)
+				assert.Error(t, err)
+				var storeErr *news.CustomError
+				assert.ErrorAs(t, err, &storeErr)
+				assert.Equal(t, tc.expectedStatus, storeErr.GetHttpStatus())
+			} else {
+				assert.NoError(t, err)
+				assertOnNews(t, tc.record, got)
 			}
 		})
 	}
+}
+
+func assertOnNews(tb testing.TB, expected, got news.Record) {
+	tb.Helper()
+	assert.Equal(tb, expected.Author, got.Author)
+	assert.Equal(tb, expected.Title, got.Title)
+	assert.Equal(tb, expected.Summary, got.Summary)
+	assert.Equal(tb, expected.Content, got.Content)
+	assert.Equal(tb, expected.Source, got.Source)
+	assert.Equal(tb, expected.Tags, got.Tags)
+	assert.NotEqual(tb, time.Time{}, got.CreateAt)
+	assert.NotEqual(tb, time.Time{}, got.UpdatedAt)
+	assert.Equal(tb, time.Time{}, got.DeletedAt)
 }
 
 func createTestContainer(ctx context.Context) (ctr *pgtc.PostgresContainer, err error) {
@@ -79,15 +95,14 @@ func createTestContainer(ctx context.Context) (ctr *pgtc.PostgresContainer, err 
 
 	ctr, err = pgtc.Run(
 		ctx,
-		"sha256:d7ead3a9d3fe4f2906d95e00edc8b36b65749a00a49c47285a35d2be95e876dd",
+		"postgres:16-alpine",
 		pgtc.WithInitScripts(sqlScripts),
 		pgtc.WithDatabase("postgres"),
 		pgtc.WithUsername("postgres"),
 		pgtc.WithPassword("postgres"),
 		testcontainers.WithWaitStrategy(
-			wait.ForLog("database is ready to accept connections").
-				WithOccurrence(2).
-				WithStartupTimeout(60*time.Second),
+			wait.ForListeningPort("5432/tcp").
+				WithStartupTimeout(30*time.Second),
 		),
 	)
 	if err != nil {

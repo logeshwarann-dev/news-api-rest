@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS news (
 
 INSERT INTO news (id, author, title, summary, content, source, tags, created_at, updated_at)
 VALUES (
-    'c2f92252-348f-7374-b4bc-43dbbc88445a',
+    '67a7f4b7-2261-4121-a578-bf9da06aa0f3',
     'Batman',
     'Breaking NEWS',
     'A brief summary of news',
@@ -28,9 +28,9 @@ VALUES (
     NOW()
 );
 
-INSERT INTO news (id, author, title, summary, content, source, tags created_at, updated_at)
+INSERT INTO news (id, author, title, summary, content, source, tags, created_at, updated_at)
 VALUES (
-    'd2f92090-348f-4372-b4bg-43dbbc88445z',
+    '79d8b51d-97dd-48f4-b619-1f637f15b395',
     'Superman',
     'Breaking NEWS',
     'A brief summary of news',
@@ -43,9 +43,9 @@ VALUES (
 
 ---Deleted News---
 
-INSERT INTO news (id, author, title, summary, content, source, tags created_at, updated_at, deleted_at)
+INSERT INTO news (id, author, title, summary, content, source, tags, created_at, updated_at, deleted_at)
 VALUES (
-    'n2f92090-348f-4372-b4bv-43dbbc88445i',
+    'd635e974-be17-49a9-b962-d508381939ed',
     'Spiderman',
     'Breaking NEWS',
     'A brief summary of news',
