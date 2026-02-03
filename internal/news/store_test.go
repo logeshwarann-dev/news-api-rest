@@ -244,7 +244,36 @@ func TestStore_UpdateById(t *testing.T) {
 }
 
 func TestStore_DeleteById(t *testing.T) {
+	testcases := []struct {
+		name           string
+		ctx            context.Context
+		newsId         uuid.UUID
+		expectedErr    string
+		expectedStatus int
+	}{
+		{
+			name:           "return_no_error",
+			ctx:            context.Background(),
+			newsId:         uuid.MustParse("67a7f4b7-2261-4121-a578-bf9da06aa0f3"),
+			expectedStatus: http.StatusNoContent,
+		},
+	}
 
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := news.NewStore(db)
+			err := s.DeleteById(tc.ctx, tc.newsId)
+			if tc.expectedErr != "" {
+				assert.Error(t, err)
+				assert.ErrorContains(t, err, tc.expectedErr)
+				var storeErr *news.CustomError
+				assert.ErrorAs(t, err, &storeErr)
+				assert.Equal(t, tc.expectedStatus, storeErr.GetHttpStatus())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
 }
 
 func assertOnNews(tb testing.TB, expected, got news.Record) {
