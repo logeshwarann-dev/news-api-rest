@@ -43,9 +43,8 @@ func (s Store) FindAll(ctx context.Context) (news []Record, err error) {
 }
 
 // get news by id
-
 func (s Store) FindById(ctx context.Context, id uuid.UUID) (news Record, err error) {
-	err = s.db.NewSelect().Model(&news).Where("id = ?", id).Scan(ctx, &news)
+	err = s.db.NewSelect().Model(&news).Where("id = ?", id).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return news, NewCustomError(err, http.StatusNotFound)
@@ -72,7 +71,6 @@ func (s Store) UpdateById(ctx context.Context, id uuid.UUID, news Record) error 
 }
 
 // delete news by id
-
 func (s Store) DeleteById(ctx context.Context, id uuid.UUID) (err error) {
 	_, err = s.db.NewDelete().Model(&Record{}).Where("id = ?", id).Returning("NULL").Exec(ctx)
 	if err != nil {
