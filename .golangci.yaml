@@ -1,3 +1,4 @@
+version: "2"
 run:
   # Concurrently run upto 4
   concurrency: 4
@@ -27,12 +28,6 @@ linters-settings:
       - style
   gocyclo:
     min-complexity: 15
-  gofumpt:
-    module-path: github.com/logeshwarann-dev/news-api-rest
-    extra-rules: true
-  # Import statements are formatted
-  goimports:
-    local-prefixes: github.com/logeshwarann-dev/news-api-rest
   gosimple:
     checks: ["all"]
   govet:
@@ -86,9 +81,6 @@ linters-settings:
       - name: redefines-builtin-id
   staticcheck:
     checks: ["all"]
-  stylecheck:
-    checks: ["all"]
-    http-status-code-whitelist: []
 
 linters:
   enable:
@@ -111,8 +103,6 @@ linters:
     - gocritic
     - gocyclo
     - godot
-    - gofumpt
-    - goimports
     - goprintffuncname
     - gosec
     - interfacebloat
@@ -131,8 +121,6 @@ linters:
     - revive
     - rowserrcheck
     - sqlclosecheck
-    - stylecheck
-    - tenv
     - testpackage
     - thelper
     - tparallel
