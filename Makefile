@@ -1,8 +1,30 @@
+GO_BIN?=$(shell pwd)/.bin
+SHELL:=env PATH=$(GO_BIN):$(PATH) $(SHELL)
+
+# format the code
 fmt::
-	go fmt ./...
+	${GO_BIN}/golangci-lint.exe run --fix -v ./...
+
+# run generate command
+generate::
+	go generate ./...
+
+# run the server
 run::
 	go run ./cmd/api-server/main.go
+
+# run tests
 test::
 	go test -v -cover ./...
+
+# run tidy
 tidy::
 	go mod tidy -v
+
+# setup tools
+tools::
+	mkdir -p $(GO_BIN)
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b ${GO_BIN} v2.0.0
+# 	@cat tools.go | grep _ | awk -F'"' '{print $$2}' | xargs -tI % sh -c 'GOBIN=${GO_BIN} go install %'
+# 	GOBIN=${GO_BIN} go install tool
+	go install github.com/golang/mock/mockgen@v1.6.0

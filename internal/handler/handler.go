@@ -11,6 +11,9 @@ import (
 	"github.com/logeshwarann-dev/news-api-rest/internal/validator"
 )
 
+//go:generate mockgen -source=handler.go -destination=mocks/handler.go -package=mockshandler
+
+// NewsStorer represents the news store operations
 type NewsStorer interface {
 	//Create News
 	Create(store.News) (store.News, error)
