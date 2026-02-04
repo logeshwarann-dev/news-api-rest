@@ -6,6 +6,7 @@ toolchain go1.24.12
 
 require (
 	github.com/docker/go-connections v0.6.0
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/testcontainers/testcontainers-go v0.40.0
