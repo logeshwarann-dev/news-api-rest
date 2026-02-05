@@ -5,11 +5,12 @@
 package mockshandler
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
-	store "github.com/logeshwarann-dev/news-api-rest/internal/store"
+	news "github.com/logeshwarann-dev/news-api-rest/internal/news"
 )
 
 // MockNewsStorer is a mock of NewsStorer interface.
@@ -36,75 +37,74 @@ func (m *MockNewsStorer) EXPECT() *MockNewsStorerMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockNewsStorer) Create(arg0 store.News) (store.News, error) {
+func (m *MockNewsStorer) Create(arg0 context.Context, arg1 news.Record) (news.Record, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0)
-	ret0, _ := ret[0].(store.News)
+	ret := m.ctrl.Call(m, "Create", arg0, arg1)
+	ret0, _ := ret[0].(news.Record)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockNewsStorerMockRecorder) Create(arg0 interface{}) *gomock.Call {
+func (mr *MockNewsStorerMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNewsStorer)(nil).Create), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockNewsStorer)(nil).Create), arg0, arg1)
 }
 
 // DeleteById mocks base method.
-func (m *MockNewsStorer) DeleteById(arg0 uuid.UUID) error {
+func (m *MockNewsStorer) DeleteById(arg0 context.Context, arg1 uuid.UUID) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteById", arg0)
+	ret := m.ctrl.Call(m, "DeleteById", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteById indicates an expected call of DeleteById.
-func (mr *MockNewsStorerMockRecorder) DeleteById(arg0 interface{}) *gomock.Call {
+func (mr *MockNewsStorerMockRecorder) DeleteById(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteById", reflect.TypeOf((*MockNewsStorer)(nil).DeleteById), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteById", reflect.TypeOf((*MockNewsStorer)(nil).DeleteById), arg0, arg1)
 }
 
 // FindAll mocks base method.
-func (m *MockNewsStorer) FindAll() ([]store.News, error) {
+func (m *MockNewsStorer) FindAll(arg0 context.Context) ([]news.Record, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindAll")
-	ret0, _ := ret[0].([]store.News)
+	ret := m.ctrl.Call(m, "FindAll", arg0)
+	ret0, _ := ret[0].([]news.Record)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindAll indicates an expected call of FindAll.
-func (mr *MockNewsStorerMockRecorder) FindAll() *gomock.Call {
+func (mr *MockNewsStorerMockRecorder) FindAll(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockNewsStorer)(nil).FindAll))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindAll", reflect.TypeOf((*MockNewsStorer)(nil).FindAll), arg0)
 }
 
 // FindById mocks base method.
-func (m *MockNewsStorer) FindById(arg0 uuid.UUID) (store.News, error) {
+func (m *MockNewsStorer) FindById(arg0 context.Context, arg1 uuid.UUID) (news.Record, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindById", arg0)
-	ret0, _ := ret[0].(store.News)
+	ret := m.ctrl.Call(m, "FindById", arg0, arg1)
+	ret0, _ := ret[0].(news.Record)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // FindById indicates an expected call of FindById.
-func (mr *MockNewsStorerMockRecorder) FindById(arg0 interface{}) *gomock.Call {
+func (mr *MockNewsStorerMockRecorder) FindById(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockNewsStorer)(nil).FindById), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindById", reflect.TypeOf((*MockNewsStorer)(nil).FindById), arg0, arg1)
 }
 
 // UpdateById mocks base method.
-func (m *MockNewsStorer) UpdateById(arg0 uuid.UUID, arg1 store.News) (store.News, error) {
+func (m *MockNewsStorer) UpdateById(arg0 context.Context, arg1 uuid.UUID, arg2 news.Record) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateById", arg0, arg1)
-	ret0, _ := ret[0].(store.News)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "UpdateById", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // UpdateById indicates an expected call of UpdateById.
-func (mr *MockNewsStorerMockRecorder) UpdateById(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockNewsStorerMockRecorder) UpdateById(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateById", reflect.TypeOf((*MockNewsStorer)(nil).UpdateById), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateById", reflect.TypeOf((*MockNewsStorer)(nil).UpdateById), arg0, arg1, arg2)
 }

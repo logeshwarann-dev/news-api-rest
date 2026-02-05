@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
-	"github.com/logeshwarann-dev/news-api-rest/internal/store"
+	"github.com/logeshwarann-dev/news-api-rest/internal/news"
 	"github.com/logeshwarann-dev/news-api-rest/internal/validator"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,7 +13,7 @@ import (
 func Test_ValidateNewNewsRequest(t *testing.T) {
 	type expectations struct {
 		err string
-		req store.News
+		req news.Record
 	}
 	testcases := []struct {
 		name     string
@@ -122,7 +122,7 @@ func Test_ValidateNewNewsRequest(t *testing.T) {
 				CreatedAt: "2026-01-30T18:35:43+05:30",
 				Tags:      []string{"test-tag"},
 			},
-			expected: expectations{req: store.News{
+			expected: expectations{req: news.Record{
 				Author:  "test-author",
 				Title:   "test-title",
 				Summary: "test-summary",

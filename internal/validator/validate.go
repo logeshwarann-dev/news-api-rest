@@ -8,10 +8,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
-	"github.com/logeshwarann-dev/news-api-rest/internal/store"
+	"github.com/logeshwarann-dev/news-api-rest/internal/news"
 )
 
-func ValidateNewsRequest(newsRecord model.NewsRecord) (news store.News, errs error) {
+func ValidateNewsRequest(newsRecord model.NewsRecord) (result news.Record, errs error) {
 
 	if newsRecord.Author == "" {
 		errs = errors.Join(errs, fmt.Errorf("author is empty: %s", newsRecord.Author))
@@ -40,7 +40,7 @@ func ValidateNewsRequest(newsRecord model.NewsRecord) (news store.News, errs err
 	if len(newsRecord.Tags) == 0 {
 		errs = errors.Join(errs, fmt.Errorf("tags are empty"))
 	}
-	news = store.News{
+	result = news.Record{
 		Author:    newsRecord.Author,
 		Title:     newsRecord.Title,
 		Summary:   newsRecord.Summary,
@@ -49,7 +49,7 @@ func ValidateNewsRequest(newsRecord model.NewsRecord) (news store.News, errs err
 		Source:    urlValue.String(),
 		Tags:      newsRecord.Tags,
 	}
-	return news, errs
+	return result, errs
 }
 
 func ValidateNewsId(id string) (newsId uuid.UUID, err error) {
