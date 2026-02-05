@@ -1,13 +1,14 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/google/uuid"
 	"github.com/logeshwarann-dev/news-api-rest/internal/logger"
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
-	"github.com/logeshwarann-dev/news-api-rest/internal/store"
+	"github.com/logeshwarann-dev/news-api-rest/internal/news"
 	"github.com/logeshwarann-dev/news-api-rest/internal/validator"
 )
 
@@ -16,21 +17,21 @@ import (
 // NewsStorer represents the news store operations
 type NewsStorer interface {
 	//Create News
-	Create(store.News) (store.News, error)
+	Create(context.Context, news.Record) (news.Record, error)
 	//Get All News
-	FindAll() ([]store.News, error)
+	FindAll(context.Context) ([]news.Record, error)
 	//Get News By Id
-	FindById(uuid.UUID) (store.News, error)
+	FindById(context.Context, uuid.UUID) (news.Record, error)
 	//Update News By Id
-	UpdateById(uuid.UUID, store.News) (store.News, error)
+	UpdateById(context.Context, uuid.UUID, news.Record) error
 	//Delete News By Id
-	DeleteById(uuid.UUID) error
+	DeleteById(context.Context, uuid.UUID) error
 }
 
 func PostNews(ns NewsStorer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
-		log := logger.FromContext(r.Context())
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		log.Info("postnews request recieved")
 		var newsRequestBody model.NewsRecord
 		if err := json.NewDecoder(r.Body).Decode(&newsRequestBody); err != nil {
@@ -38,7 +39,7 @@ func PostNews(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		var newsReq store.News
+		var newsReq news.Record
 		var err error
 		if newsReq, err = validator.ValidateNewsRequest(newsRequestBody); err != nil {
 			log.Error("validation error, invalid request", "error", err.Error())
@@ -46,7 +47,7 @@ func PostNews(ns NewsStorer) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		_, err = ns.Create(newsReq)
+		_, err = ns.Create(ctx, newsReq)
 		if err != nil {
 			log.Error("failed adding news in db", "error", err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
@@ -58,10 +59,11 @@ func PostNews(ns NewsStorer) http.HandlerFunc {
 
 func GetAllNews(ns NewsStorer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log := logger.FromContext(r.Context())
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		log.Info("getallnews request recieved")
 
-		records, err := ns.FindAll()
+		records, err := ns.FindAll(ctx)
 		newsRecords := model.AllNewsRecords{
 			NewsRecords: records,
 		}
@@ -81,7 +83,8 @@ func GetAllNews(ns NewsStorer) http.HandlerFunc {
 
 func GetNewsByID(ns NewsStorer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log := logger.FromContext(r.Context())
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		log.Info("getnewsbyid request recieved")
 		id := r.PathValue("news_id")
 		newsId, err := validator.ValidateNewsId(id)
@@ -90,7 +93,7 @@ func GetNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		newsRecord, err := ns.FindById(newsId)
+		newsRecord, err := ns.FindById(ctx, newsId)
 		if err != nil {
 			log.Error("failed finding newsrecord by id", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -108,7 +111,8 @@ func GetNewsByID(ns NewsStorer) http.HandlerFunc {
 
 func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log := logger.FromContext(r.Context())
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		log.Info("updatenewsbyid request recieved")
 		var req model.NewsRecord
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -116,7 +120,7 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		var newsReq store.News
+		var newsReq news.Record
 		var err error
 		if newsReq, err = validator.ValidateNewsRequest(req); err != nil {
 			log.Error("invalid request", "error", err)
@@ -130,14 +134,9 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		resp, err := ns.UpdateById(newsId, newsReq)
+		err = ns.UpdateById(ctx, newsId, newsReq)
 		if err != nil {
 			log.Error("unable to update news by id", "error", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			log.Error("response encoding failed", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -147,7 +146,8 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 
 func DeleteNewsByID(ns NewsStorer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		log := logger.FromContext(r.Context())
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		log.Info("deletenewsbyid request recieved")
 
 		id := r.PathValue("news_id")
@@ -157,7 +157,7 @@ func DeleteNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err := ns.DeleteById(newsId); err != nil {
+		if err := ns.DeleteById(ctx, newsId); err != nil {
 			log.Error("failed to delete news by id", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return

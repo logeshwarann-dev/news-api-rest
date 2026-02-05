@@ -227,7 +227,7 @@ func TestStore_UpdateById(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			s := news.NewStore(db)
 			got, _ := s.FindById(tc.ctx, tc.newsId)
-			tc.updatedRecord.CreateAt = got.CreateAt
+			tc.updatedRecord.CreatedAt = got.CreatedAt
 			tc.updatedRecord.UpdatedAt = got.UpdatedAt
 			err := s.UpdateById(tc.ctx, tc.newsId, tc.updatedRecord)
 			if tc.expectedErr != "" {
@@ -284,7 +284,7 @@ func assertOnNews(tb testing.TB, expected, got news.Record) {
 	assert.Equal(tb, expected.Content, got.Content)
 	assert.Equal(tb, expected.Source, got.Source)
 	assert.Equal(tb, expected.Tags, got.Tags)
-	assert.NotEqual(tb, time.Time{}, got.CreateAt)
+	assert.NotEqual(tb, time.Time{}, got.CreatedAt)
 	assert.NotEqual(tb, time.Time{}, got.UpdatedAt)
 	assert.Equal(tb, time.Time{}, got.DeletedAt)
 }

@@ -15,7 +15,7 @@ run::
 
 # run tests
 test::
-	go test -v -cover ./...
+	go clean -testcache && go test -v -cover ./...
 
 # run tidy
 tidy::

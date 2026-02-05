@@ -13,7 +13,7 @@ import (
 	"github.com/logeshwarann-dev/news-api-rest/internal/handler"
 	mockshandler "github.com/logeshwarann-dev/news-api-rest/internal/handler/mocks"
 	"github.com/logeshwarann-dev/news-api-rest/internal/model"
-	"github.com/logeshwarann-dev/news-api-rest/internal/store"
+	"github.com/logeshwarann-dev/news-api-rest/internal/news"
 )
 
 func Test_PostNews(t *testing.T) {
@@ -23,6 +23,7 @@ func Test_PostNews(t *testing.T) {
 		setup          func(tb testing.TB) handler.NewsStorer
 		expectedStatus int
 	}{
+
 		{
 			name:    "incorrect_request_body",
 			request: strings.NewReader(`{`),
@@ -35,16 +36,16 @@ func Test_PostNews(t *testing.T) {
 		{
 			name: "invalid_request",
 			request: strings.NewReader(`
-			{
-			"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
-			"author": "test-author",
-			"title": "test-title",
-			"summary": "test-summary",
-			"content": "test-content",
-			"source": "https://www.google.com",
-			"createdAt": "",
-			"tags": ["test-tag"]
-			}`),
+				{
+				"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
+				"author": "test-author",
+				"title": "test-title",
+				"summary": "test-summary",
+				"content": "test-content",
+				"source": "https://www.google.com",
+				"createdAt": "",
+				"tags": ["test-tag"]
+				}`),
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				return mockshandler.NewMockNewsStorer(gomock.NewController(t))
@@ -67,7 +68,7 @@ func Test_PostNews(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().Create(gomock.Any()).Return(store.News{}, errors.New("db error"))
+				mh.EXPECT().Create(gomock.Any(), gomock.Any()).Return(news.Record{}, errors.New("db error"))
 				return mh
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -89,7 +90,7 @@ func Test_PostNews(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().Create(gomock.Any()).Return(store.News{}, nil)
+				mh.EXPECT().Create(gomock.Any(), gomock.Any()).Return(news.Record{}, nil)
 				return mh
 			},
 			expectedStatus: http.StatusCreated,
@@ -121,7 +122,7 @@ func Test_GetAllNews(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().FindAll().Return([]store.News{}, errors.New("db error"))
+				mh.EXPECT().FindAll(gomock.Any()).Return([]news.Record{}, errors.New("db error"))
 				return mh
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -131,7 +132,7 @@ func Test_GetAllNews(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().FindAll().Return([]store.News{}, nil)
+				mh.EXPECT().FindAll(gomock.Any()).Return([]news.Record{}, nil)
 				return mh
 			},
 			expectedStatus: http.StatusOK,
@@ -186,7 +187,7 @@ func Test_GetNewsByID(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().FindById(gomock.Any()).Return(store.News{}, errors.New("db error"))
+				mh.EXPECT().FindById(gomock.Any(), gomock.Any()).Return(news.Record{}, errors.New("db error"))
 				return mh
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -197,7 +198,7 @@ func Test_GetNewsByID(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().FindById(gomock.Any()).Return(store.News{}, nil)
+				mh.EXPECT().FindById(gomock.Any(), gomock.Any()).Return(news.Record{}, nil)
 				return mh
 			},
 			expectedStatus: http.StatusOK,
@@ -250,15 +251,15 @@ func Test_UpdateNewsByID(t *testing.T) {
 		{
 			name: "incorrect_news_id",
 			request: strings.NewReader(`{
-				"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
-				"author": "test-author",
-				"title": "test-title",
-				"summary": "test-summary",
-				"content": "test-content",
-				"source": "https://google.com",
-				"createdAt": "2026-01-30T18:35:43+05:30",
-				"tags": ["test-tag"]
-				}`),
+					"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
+					"author": "test-author",
+					"title": "test-title",
+					"summary": "test-summary",
+					"content": "test-content",
+					"source": "https://google.com",
+					"createdAt": "2026-01-30T18:35:43+05:30",
+					"tags": ["test-tag"]
+					}`),
 			newsId: "$%123",
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
@@ -269,15 +270,15 @@ func Test_UpdateNewsByID(t *testing.T) {
 		{
 			name: "invalid_request",
 			request: strings.NewReader(`{
-				"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
-				"author": "",
-				"title": "",
-				"summary": "",
-				"content": "test-content",
-				"source": "https://google.com",
-				"createdAt": "1234",
-				"tags": ["test-tag"]
-				}`),
+					"id": "c2f92052-348f-4372-b4bc-43dbbc88445a",
+					"author": "",
+					"title": "",
+					"summary": "",
+					"content": "test-content",
+					"source": "https://google.com",
+					"createdAt": "1234",
+					"tags": ["test-tag"]
+					}`),
 			newsId: "c2f92052-348f-4372-b4bc-43dbbc88445a",
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
@@ -302,7 +303,7 @@ func Test_UpdateNewsByID(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().UpdateById(gomock.Any(), gomock.Any()).Return(store.News{}, errors.New("db error"))
+				mh.EXPECT().UpdateById(gomock.Any(), gomock.Any(), gomock.Any()).Return(errors.New("db error"))
 				return mh
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -324,7 +325,7 @@ func Test_UpdateNewsByID(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().UpdateById(gomock.Any(), gomock.Any()).Return(store.News{}, nil)
+				mh.EXPECT().UpdateById(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 				return mh
 			},
 			expectedStatus: http.StatusOK,
@@ -340,13 +341,6 @@ func Test_UpdateNewsByID(t *testing.T) {
 			r.SetPathValue("news_id", tc.newsId)
 			//Act
 			handler.UpdateNewsByID(tc.setup(t))(w, r)
-			var actualResp model.NewsRecord
-			if len(w.Body.Bytes()) != 0 {
-				if err := json.Unmarshal(w.Body.Bytes(), &actualResp); err != nil {
-					t.Errorf("response unmarshalling failed: %v", err)
-					return
-				}
-			}
 			//Assert
 			if w.Result().StatusCode != tc.expectedStatus {
 				t.Errorf("expected status: %d, got status: %d", tc.expectedStatus, w.Result().StatusCode)
@@ -377,7 +371,7 @@ func Test_DeleteNewsByID(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().DeleteById(gomock.Any()).Return(errors.New("db error"))
+				mh.EXPECT().DeleteById(gomock.Any(), gomock.Any()).Return(errors.New("db error"))
 				return mh
 			},
 			expectedStatus: http.StatusInternalServerError,
@@ -388,7 +382,7 @@ func Test_DeleteNewsByID(t *testing.T) {
 			setup: func(tb testing.TB) handler.NewsStorer {
 				tb.Helper()
 				mh := mockshandler.NewMockNewsStorer(gomock.NewController(t))
-				mh.EXPECT().DeleteById(gomock.Any()).Return(nil)
+				mh.EXPECT().DeleteById(gomock.Any(), gomock.Any()).Return(nil)
 				return mh
 			},
 			expectedStatus: http.StatusNoContent,
