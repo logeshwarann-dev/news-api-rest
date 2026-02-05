@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -47,9 +48,19 @@ func PostNews(ns NewsStorer) http.HandlerFunc {
 			w.Write([]byte(err.Error()))
 			return
 		}
-		_, err = ns.Create(ctx, newsReq)
+		respRecord, err := ns.Create(ctx, newsReq)
 		if err != nil {
 			log.Error("failed adding news in db", "error", err.Error())
+			var dbErr *news.CustomError
+			if errors.As(err, &dbErr) {
+				w.WriteHeader(dbErr.GetHttpStatus())
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if err := json.NewEncoder(w).Encode(respRecord); err != nil {
+			log.Error("failed encoding records", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -69,6 +80,11 @@ func GetAllNews(ns NewsStorer) http.HandlerFunc {
 		}
 		if err != nil {
 			log.Error("failed finding all news", "error", err)
+			var dbErr *news.CustomError
+			if errors.As(err, &dbErr) {
+				w.WriteHeader(dbErr.GetHttpStatus())
+				return
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -96,6 +112,11 @@ func GetNewsByID(ns NewsStorer) http.HandlerFunc {
 		newsRecord, err := ns.FindById(ctx, newsId)
 		if err != nil {
 			log.Error("failed finding newsrecord by id", "error", err)
+			var dbErr *news.CustomError
+			if errors.As(err, &dbErr) {
+				w.WriteHeader(dbErr.GetHttpStatus())
+				return
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -137,6 +158,11 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 		err = ns.UpdateById(ctx, newsId, newsReq)
 		if err != nil {
 			log.Error("unable to update news by id", "error", err)
+			var dbErr *news.CustomError
+			if errors.As(err, &dbErr) {
+				w.WriteHeader(dbErr.GetHttpStatus())
+				return
+			}
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -154,6 +180,11 @@ func DeleteNewsByID(ns NewsStorer) http.HandlerFunc {
 		newsId, err := validator.ValidateNewsId(id)
 		if err != nil {
 			log.Error("invalid newsid", "error", err)
+			var dbErr *news.CustomError
+			if errors.As(err, &dbErr) {
+				w.WriteHeader(dbErr.GetHttpStatus())
+				return
+			}
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
