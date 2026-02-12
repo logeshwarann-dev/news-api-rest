@@ -27,7 +27,8 @@ docker_build('news-migrate', '.', dockerfile='Dockerfile', build_args={"APP": "m
 k8s_yaml([
     'deployment/namespace.yml',
     'deployment/deployment.yml',
-    'deployment/service.yml'
+    'deployment/service.yml',
+    'deployment/migrate.yml'
 ])
 
 k8s_resource(workload='news-api-server', port_forwards=[
