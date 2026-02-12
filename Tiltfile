@@ -17,7 +17,7 @@ k8s_yaml(secret_from_dict(name='database-secret', namespace='news-service', inpu
     'host': 'postgres-postgresql.default.svc.cluster.local',
     'dbname': 'postgres',
     'password': 'password',
-    'post': '5432',
+    'port': '5432',
     'user': 'postgres'
 }))
 

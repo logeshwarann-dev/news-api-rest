@@ -5,7 +5,7 @@ ARG GO_VERSION=1.24.0
 FROM golang:${GO_VERSION}-bullseye AS builder
 ARG APP
 
-WORKDIR /APP
+WORKDIR /app
 
 COPY go.mod go.sum ./
 
