@@ -155,6 +155,19 @@ func UpdateNewsByID(ns NewsStorer) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		found, err := ns.FindById(ctx, newsId)
+		if err != nil {
+			log.Error("failed finding newsrecord by id", "error", err)
+			var dbErr *news.CustomError
+			if errors.As(err, &dbErr) {
+				w.WriteHeader(dbErr.GetHttpStatus())
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		newsReq.UpdatedAt = found.UpdatedAt
+		newsReq.DeletedAt = found.DeletedAt
 		err = ns.UpdateById(ctx, newsId, newsReq)
 		if err != nil {
 			log.Error("unable to update news by id", "error", err)
