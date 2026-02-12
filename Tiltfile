@@ -1,4 +1,4 @@
-version_settings(constraints'>=0.33.21')
+version_settings(constraint='>=0.33.21')
 
 load('ext://helm_resource', 'helm_resource', 'helm_repo')
 load('ext://secret', 'secret_from_dict')
@@ -24,11 +24,11 @@ k8s_yaml(secret_from_dict(name='database-secret', namespace='news-service', inpu
 docker_build('news-api-server', '.', dockerfile='Dockerfile', build_args={"APP": "api-server"})
 docker_build('news-migrate', '.', dockerfile='Dockerfile', build_args={"APP": "migrate"})
 
-k8s_yaml({
+k8s_yaml([
     'deployment/namespace.yml',
     'deployment/deployment.yml',
     'deployment/service.yml'
-})
+])
 
 k8s_resource(workload='news-api-server', port_forwards=[
     port_forward(8080, 8080, name='news-api-server')
