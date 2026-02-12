@@ -10,7 +10,7 @@ type NewsRecord struct {
 	Summary   string   `json:"summary,omitempty"`
 	Content   string   `json:"content,omitempty"`
 	Source    string   `json:"source,omitempty"`
-	CreatedAt string   `json:"createdAt,omitempty"`
+	CreatedAt string   `json:"created_at,omitempty"`
 	Tags      []string `json:"tags,omitempty"`
 }
 

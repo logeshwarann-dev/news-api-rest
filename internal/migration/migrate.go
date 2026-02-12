@@ -6,18 +6,18 @@ import (
 	"github.com/uptrace/bun/migrate"
 )
 
-var migrations = migrate.NewMigrations()
+var Migrations = migrate.NewMigrations()
 
 func New() *migrate.Migrations {
-	return migrations
+	return Migrations
 }
 
 //go:embed *.sql
 var sqlMigration embed.FS
 
 func init() {
-	migrations.DiscoverCaller()
-	if err := migrations.Discover(sqlMigration); err != nil {
+	Migrations.DiscoverCaller()
+	if err := Migrations.Discover(sqlMigration); err != nil {
 		panic(err)
 	}
 }

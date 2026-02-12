@@ -7,25 +7,34 @@ import (
 	"strings"
 
 	"github.com/logeshwarann-dev/news-api-rest/internal/migration"
+	"github.com/logeshwarann-dev/news-api-rest/internal/postgres"
+	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"github.com/urfave/cli/v2"
 )
 
 func main() {
-	// db, err := postgres.NewDB(&postgres.Config{})
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	db, err := postgres.NewDB(&postgres.Config{
+		DbHost:   os.Getenv("DATABASE_HOST"),
+		DbPort:   os.Getenv("DATABASE_PORT"),
+		DbName:   os.Getenv("DATABASE_NAME"),
+		UserName: os.Getenv("DATABASE_USER"),
+		Password: os.Getenv("DATABASE_PASSWORD"),
+		SSLMode:  "disable",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// db.AddQueryHook(bundebug.NewQueryHook(
-	// 	bundebug.WithEnabled(false),
-	// 	bundebug.FromEnv(),
-	// ))
+	db.AddQueryHook(bundebug.NewQueryHook(
+		bundebug.WithEnabled(false),
+		bundebug.FromEnv(),
+	))
 
 	app := &cli.App{
 		Name: "migrate",
 		Commands: []*cli.Command{
-			newMigrationCmd(migrate.NewMigrator(nil, migration.New(),
+			newMigrationCmd(migrate.NewMigrator(db, migration.New(),
 				migrate.WithMarkAppliedOnSuccess(true))),
 		},
 	}
