@@ -2,7 +2,7 @@ ARG GO_VERSION=1.24.0
 
 
 # Build stage
-FROM golang:${GO_VERSION}-bullseye AS builder
+FROM golang:${GO_VERSION}-alpine AS builder
 ARG APP
 
 WORKDIR /app
