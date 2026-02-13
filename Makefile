@@ -17,6 +17,9 @@ run::
 test::
 	go clean -testcache && go test -v -cover ./...
 
+test-integration::
+	go clean -testcache && go test -v -tags integration ./test/...
+
 # run tidy
 tidy::
 	go mod tidy -v
